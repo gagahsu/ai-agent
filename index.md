@@ -132,6 +132,26 @@ style: |
       <div>互動：觀察與動作空間</div>
       <div class="chapter-subtitle">Real-Time Interaction</div>
     </Link>
+    <Link to="ch12" class="chapter-card">
+      <div class="chapter-num">Ch 12</div>
+      <div>Agent 的評估</div>
+      <div class="chapter-subtitle">Evaluation</div>
+    </Link>
+    <Link to="ch13" class="chapter-card">
+      <div class="chapter-num">Ch 13</div>
+      <div>模型後訓練</div>
+      <div class="chapter-subtitle">Post-Training: SFT & RL</div>
+    </Link>
+    <Link to="ch14" class="chapter-card">
+      <div class="chapter-num">Ch 14</div>
+      <div>Agent 的持續進化</div>
+      <div class="chapter-subtitle">Continuous Evolution</div>
+    </Link>
+    <Link to="ch15" class="chapter-card">
+      <div class="chapter-num">Ch 15</div>
+      <div>多 Agent 協作</div>
+      <div class="chapter-subtitle">Multi-Agent Collaboration</div>
+    </Link>
   </div>
 </div>
 
@@ -177,4 +197,20 @@ src: ./ch10-coding-agent.md
 
 ---
 src: ./ch11-interaction.md
+---
+
+---
+src: ./ch12-evaluation.md
+---
+
+---
+src: ./ch13-post-training.md
+---
+
+---
+src: ./ch14-continuous-evolution.md
+---
+
+---
+src: ./ch15-multi-agent.md
 ---
