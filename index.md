@@ -102,6 +102,11 @@ style: |
       <div>MCP 介紹與使用</div>
       <div class="chapter-subtitle">Model Context Protocol</div>
     </Link>
+    <Link to="ch06" class="chapter-card">
+      <div class="chapter-num">Ch 6</div>
+      <div>深入理解 AI Agent</div>
+      <div class="chapter-subtitle">Principles & Harness Engineering</div>
+    </Link>
   </div>
 </div>
 
@@ -123,4 +128,8 @@ src: ./ch04-opencode-skill.md
 
 ---
 src: ./ch05-opencode-mcp.md
+---
+
+---
+src: ./ch06-ai-agent-principles.md
 ---
