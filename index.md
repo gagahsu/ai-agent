@@ -107,6 +107,31 @@ style: |
       <div>深入理解 AI Agent</div>
       <div class="chapter-subtitle">Principles & Harness Engineering</div>
     </Link>
+    <Link to="ch07" class="chapter-card">
+      <div class="chapter-num">Ch 7</div>
+      <div>上下文工程</div>
+      <div class="chapter-subtitle">Context Engineering</div>
+    </Link>
+    <Link to="ch08" class="chapter-card">
+      <div class="chapter-num">Ch 8</div>
+      <div>使用者記憶與知識庫</div>
+      <div class="chapter-subtitle">Memory & Knowledge Base</div>
+    </Link>
+    <Link to="ch09" class="chapter-card">
+      <div class="chapter-num">Ch 9</div>
+      <div>工具設計</div>
+      <div class="chapter-subtitle">Tool Design & ACI</div>
+    </Link>
+    <Link to="ch10" class="chapter-card">
+      <div class="chapter-num">Ch 10</div>
+      <div>Coding Agent 與程式碼生成</div>
+      <div class="chapter-subtitle">Code as Meta-Capability</div>
+    </Link>
+    <Link to="ch11" class="chapter-card">
+      <div class="chapter-num">Ch 11</div>
+      <div>互動：觀察與動作空間</div>
+      <div class="chapter-subtitle">Real-Time Interaction</div>
+    </Link>
   </div>
 </div>
 
@@ -132,4 +157,24 @@ src: ./ch05-opencode-mcp.md
 
 ---
 src: ./ch06-ai-agent-principles.md
+---
+
+---
+src: ./ch07-context-engineering.md
+---
+
+---
+src: ./ch08-memory-and-knowledge.md
+---
+
+---
+src: ./ch09-tool-design.md
+---
+
+---
+src: ./ch10-coding-agent.md
+---
+
+---
+src: ./ch11-interaction.md
 ---
