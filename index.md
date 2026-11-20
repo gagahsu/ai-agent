@@ -102,6 +102,26 @@ style: |
       <div>MCP 介紹與使用</div>
       <div class="chapter-subtitle">Model Context Protocol</div>
     </Link>
+    <Link to="ch06" class="chapter-card">
+      <div class="chapter-num">Ch 6</div>
+      <div>怎麼跟 AI 說話</div>
+      <div class="chapter-subtitle">Prompting & Planning</div>
+    </Link>
+    <Link to="ch07" class="chapter-card">
+      <div class="chapter-num">Ch 7</div>
+      <div>除錯與學習</div>
+      <div class="chapter-subtitle">Debug & Learn</div>
+    </Link>
+    <Link to="ch08" class="chapter-card">
+      <div class="chapter-num">Ch 8</div>
+      <div>用 AGENTS.md 打造 AI 家教</div>
+      <div class="chapter-subtitle">AGENTS.md</div>
+    </Link>
+    <Link to="ch09" class="chapter-card">
+      <div class="chapter-num">Ch 9</div>
+      <div>AI 寫程式工具比較</div>
+      <div class="chapter-subtitle">Tool Comparison</div>
+    </Link>
   </div>
 </div>
 
@@ -123,4 +143,20 @@ src: ./ch04-opencode-skill.md
 
 ---
 src: ./ch05-opencode-mcp.md
+---
+
+---
+src: ./ch06-vibe-prompting.md
+---
+
+---
+src: ./ch07-debug-learn.md
+---
+
+---
+src: ./ch08-agents-md.md
+---
+
+---
+src: ./ch09-tool-comparison.md
 ---
