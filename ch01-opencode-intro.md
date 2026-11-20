@@ -96,13 +96,13 @@ class: flex flex-col justify-center items-center text-center
 | IDE 擴充套件 | 整合進編輯器內使用 |
 
 <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-400 text-gray-700 text-sm text-left">
-💡 <b>為什麼要學：</b> opencode 開源、可自由更換 AI 供應商（不綁定單一家），還能接 OpenRouter 使用上百種模型，彈性最高。
+💡 <b>為什麼要學：</b> opencode 開源、可自由更換 AI 供應商（不綁定單一家），也內建支援 Mistral 等多家模型供應商，彈性最高。
 </div>
 
 <!--
 想像我們平常寫程式遇到卡關，會開瀏覽器搜尋、開 ChatGPT 網頁問問題，再把答案複製貼回編輯器，一來一往很麻煩。
 opencode 就是把這位「問答工程師」直接搬進終端機裡，讓它能看到我們專案的檔案、直接幫我們動手改程式。
-它最大的特色是「開源」而且「不綁定單一 AI 供應商」，等一下我們會學到怎麼接上 OpenRouter，一次擁有上百種模型可以選。
+它最大的特色是「開源」而且「不綁定單一 AI 供應商」，之後我們會學到怎麼接上 Mistral 的模型，以後想換別家也不用重學工具。
 -->
 
 ---
@@ -164,7 +164,7 @@ class: flex flex-col justify-center items-center text-center
 想使用 opencode，第一步永遠是先 cd 進入你要處理的專案資料夾，這點跟一般終端機工具一樣。
 接著打 opencode，會開啟一個文字介面的對話視窗。
 第一次使用建議先打 /init，opencode 會掃描整個專案，自動生成一份 AGENTS.md，就像新人到職前，前輩幫忙寫的「專案交接筆記」，讓 AI 以後回答問題時更懂這個專案的來龍去脈。
-最後用 /connect 來設定要用哪一家 AI 模型，這步下一章會細講怎麼接 OpenRouter。
+最後用 /connect 來設定要用哪一家 AI 模型，這步之後會細講怎麼接 Mistral。
 -->
 
 ---
@@ -261,10 +261,10 @@ layout: end
 ---
 
 # 課程結束
-### 下一步：認識 OpenRouter，接上上百種 AI 模型！
+### 下一步：認識 Mistral，申請你的 AI 大腦！
 
 <!--
 今天我們認識了 opencode 是什麼、怎麼安裝、怎麼做初次設定，也學會了幾個最常用的斜線指令。
 大家可以先在自己電腦上把 opencode 裝起來，試著對它下一個簡單的任務看看。
-下一堂課，我們要來認識 OpenRouter，學會怎麼申請 API key，讓 opencode 能接上更多、更便宜的 AI 模型！
+下一堂課，我們要來認識 Mistral，學會怎麼申請 API key，讓 opencode 有一顆真正會思考的 AI 大腦！
 -->

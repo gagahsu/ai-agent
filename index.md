@@ -6,7 +6,7 @@ lineNumbers: true
 drawings:
   persist: false
 transition: slide-left
-title: opencode + OpenRouter 教材庫
+title: opencode + Mistral 教材庫
 routeAlias: home
 style: |
   .slidev-layout p,
@@ -84,12 +84,12 @@ style: |
     </Link>
     <Link to="ch02" class="chapter-card">
       <div class="chapter-num">Ch 2</div>
-      <div>OpenRouter 介紹與申請</div>
-      <div class="chapter-subtitle">OpenRouter & API Key</div>
+      <div>Mistral 介紹與申請</div>
+      <div class="chapter-subtitle">Mistral & API Key</div>
     </Link>
     <Link to="ch03" class="chapter-card">
       <div class="chapter-num">Ch 3</div>
-      <div>opencode + OpenRouter</div>
+      <div>opencode + Mistral</div>
       <div class="chapter-subtitle">Connect & Use Models</div>
     </Link>
     <Link to="ch04" class="chapter-card">
@@ -130,11 +130,11 @@ src: ./ch01-opencode-intro.md
 ---
 
 ---
-src: ./ch02-openrouter-intro.md
+src: ./ch02-mistral-intro.md
 ---
 
 ---
-src: ./ch03-opencode-openrouter.md
+src: ./ch03-opencode-mistral.md
 ---
 
 ---
