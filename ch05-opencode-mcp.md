@@ -46,10 +46,9 @@ style: |
 </div>
 
 <!--
-前一堂課我們教會了 opencode 記住固定流程（Skill），但有些事情光靠「記住怎麼做」還不夠，因為它需要真正連到外部系統才能動手，例如查詢市場熱度、查廣告投放狀況。
-今天要介紹的 MCP，就是讓 opencode 的雙手能伸到專案之外，接上這些外部服務的接口。
-這堂課我們會用一個實戰情境貫穿全程：用免費 API 做「AI 選品」，判斷一個商品點子值不值得做。
-學完這堂課，我們會知道 MCP 是什麼、怎麼設定、怎麼安全地使用它。
+到目前為止，opencode 能做的事都在你的電腦裡：讀檔案、改程式、執行指令。
+但寫程式的工作，很多是在電腦以外的地方，像是 GitHub 上的 issue、pull request。
+這堂課要介紹 MCP，它可以幫 AI 接上外部的服務。我們會用 GitHub 官方的 MCP server 當例子，讓 opencode 直接讀寫你在 GitHub 上的專案。
 -->
 
 ---
@@ -58,15 +57,18 @@ layout: default
 
 # Outline
 
-- **0. 情境：AI 選品** — 這堂課要解決的實際問題
+- **0. 情境：AI 看不到你的 GitHub** — 這堂課要解決的問題
 - **1. 什麼是 MCP** — Model Context Protocol 的概念
-- **2. 設定 MCP Server** — local 與 remote 兩種類型
-- **3. 安裝與驗證** — `opencode mcp add`、OAuth 授權
-- **4. 使用與權限管理** — 呼叫工具、控制存取範圍
+- **2. 準備 GitHub 權杖** — 建立 Personal Access Token
+- **3. 設定 GitHub MCP Server** — remote 與 local 兩種方式
+- **4. 使用與權限管理** — 在對話中使用、控制 AI 能做什麼
 
 <!--
-今天先講一個情境，再四段：先理解 MCP 概念，再學設定檔怎麼寫，接著練習安裝跟驗證流程，最後看怎麼在對話中使用、以及怎麼管控權限避免濫用。
-全程我們都會拿「選品」這件事當例子，讓大家看到 MCP 到底解決了什麼實際問題。
+今天分五段。
+先看一個實際的情境，了解為什麼需要 MCP。
+接著認識 MCP 是什麼。
+然後準備連線 GitHub 需要的權杖，再實際把 GitHub MCP server 接進 opencode。
+最後學怎麼在對話中使用，以及怎麼控制 AI 能做哪些事，這點非常重要。
 -->
 
 ---
@@ -74,33 +76,35 @@ layout: section
 class: flex flex-col justify-center items-center text-center
 ---
 
-# 0. 情境：AI 選品
-# Product Research with Free APIs
+# 0. 情境：AI 看不到你的 GitHub
+# Your Project Lives Online Too
 
 <!--
-先講清楚今天要解決的問題。
+先來看一個大家很快就會遇到的情境。
 -->
 
 ---
 
-# 情境：這個商品值得做嗎？
+# 情境：AI 只看得到你的電腦
 
-想像我們在做電商，手上有一個商品點子，想知道「現在做這個，是不是好時機」。單靠 AI 自己的知識庫沒辦法回答，因為市場熱度是即時變動的資料。
+你的練習專案放在 GitHub 上，用 issue 記錄待辦事項和 bug。但 opencode 預設只看得到你電腦裡的檔案。
 
-| 想確認的問題 | 需要的即時資料 |
+| 想請 AI 做的事 | 沒有 MCP 時 |
 | --- | --- |
-| 大家最近有在搜這個關鍵字嗎？ | Google 搜尋熱度趨勢 |
-| 競品有沒有在大量投廣告？ | 廣告投放資料 |
-| 網路上大家怎麼討論這個東西？ | 社群討論聲量 |
+| 「幫我看一下還有哪些 issue 沒處理」 | 要自己打開網頁，一個一個複製貼上 |
+| 「照 issue #3 的描述修改程式」 | 要自己把 issue 內容貼給 AI |
+| 「把剛剛發現的 bug 開成一個 issue」 | 要自己到網頁上填表單 |
+| 「這個 PR 的留言說了什麼？」 | 要自己去看、自己整理 |
 
 <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-400 text-gray-700 text-sm text-left">
-💡 <b>三個免費資料源：</b> 這堂課會用 <b>Google Trends</b>（搜尋熱度）、<b>Meta Ad Library</b>（廣告熱度）、<b>Reddit</b>（討論聲量）三個免費 API，示範怎麼接成 MCP 給 opencode 用。
+💡 <b>接上 GitHub MCP 之後：</b> 上面這些事，都可以直接在 opencode 裡用一句話完成。
 </div>
 
 <!--
-選品最怕的就是憑感覺，AI 訓練資料是過去的，它不知道「這個月」大家在搜什麼、誰在投廣告。
-這正是 MCP 要解決的問題：讓 AI 能連到外部、即時的資料來源，而不是只能靠腦袋裡的舊知識瞎猜。
-這堂課我們會用三個完全免費的資料源，一步步接成 MCP，讓 opencode 變成一個會自己查資料、幫你交叉比對的選品助手。
+很多人會把專案放在 GitHub 上，用 issue 當作待辦清單，記錄要做的功能、發現的 bug。
+但 opencode 預設只看得到你電腦裡的檔案，看不到 GitHub 上的東西。
+所以你想請 AI 照某個 issue 修改程式，就要自己打開網頁、複製 issue 內容、貼給 AI，很麻煩。
+接上 GitHub 的 MCP server 之後，AI 就能自己去讀 issue、開 issue、看 PR，你只要一句話就好。
 -->
 
 ---
@@ -112,29 +116,50 @@ class: flex flex-col justify-center items-center text-center
 # Model Context Protocol
 
 <!--
-先來搞懂這個聽起來很技術的名詞。
+接著來認識 MCP。
 -->
 
 ---
 
 # 什麼是 MCP？
 
-「一套讓 AI 連接外部工具與資料的標準協定」，讓 opencode 除了讀寫本地檔案，還能查詢搜尋熱度、廣告資料、社群討論等外部服務。
+「一套讓 AI 連接外部工具與資料的標準協定」，讓 opencode 除了讀寫本地檔案，還能使用 GitHub、資料庫、瀏覽器等外部服務。
 
 | 沒有 MCP | 有 MCP |
 | --- | --- |
-| AI 只能看得到你電腦裡的檔案 | AI 能即時查 Google Trends、Reddit 等外部資料 |
+| AI 只能看得到你電腦裡的檔案 | AI 能讀寫 GitHub 上的 issue、PR |
 | 每接一個新服務都要客製化開發 | 用同一套協定接上任何相容服務 |
-| 選品判斷全靠 AI 舊知識瞎猜 | AI 能引用當下真實數據下判斷 |
+| 你要當 AI 和外部服務之間的「傳話筒」 | AI 自己去查、自己去做 |
 
 <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-400 text-gray-700 text-sm text-left">
-💡 <b>比喻：</b> MCP 就像電腦的 USB 接口，不管你插滑鼠、鍵盤還是隨身碟，規格統一，AI 只要「插上」對應的 MCP server，就能立刻多一項新能力，例如查詢即時市場數據的能力。
+💡 <b>比喻：</b> MCP 就像電腦的 USB 接口，不管你插滑鼠、鍵盤還是隨身碟，規格統一。AI 只要「插上」對應的 MCP server，就能立刻多一項新能力。
 </div>
 
 <!--
-opencode 本身只知道怎麼讀寫你電腦上的檔案，但如果你想請它「幫我看一下這個關鍵字最近搜尋熱度是漲是跌」，它自己是做不到的，因為那是外部系統的即時資料。
-MCP 要解決的正是這件事：它定義了一套統一的溝通規格，讓 AI 跟各種外部工具「插拔」連接，就像 USB 接口一樣，不管接的是滑鼠還是隨身碟，規格都一樣。
-只要有人幫某個服務做好了 MCP server（我們接下來要接的 Google Trends、Meta Ad Library、Reddit 都算），我們就能直接接上來用，不用自己重新開發串接程式。
+MCP 的全名是 Model Context Protocol，它是一套標準，規定 AI 要怎麼跟外部的工具、資料溝通。
+最好的比喻是 USB：不管插的是滑鼠還是隨身碟，規格都一樣，插上去就能用。
+很多服務都推出了自己的 MCP server，GitHub 就是其中之一。AI 只要接上 GitHub 的 MCP server，就會多出一組操作 GitHub 的工具，像是列出 issue、建立 issue、開 PR。
+有了 MCP，你就不用再當 AI 跟 GitHub 之間的傳話筒了。
+-->
+
+---
+
+# MCP Server 的兩種類型
+
+| 類型 | 運作方式 | 優點 | 缺點 |
+| --- | --- | --- | --- |
+| `remote` | 連到架在雲端的 server，透過網址連線 | 不用在電腦上安裝任何東西 | 需要網路，要看服務商有沒有提供 |
+| `local` | 在你的電腦上執行一支程式 | 可以自己控制、離線工具也能用 | 要安裝執行環境（例如 Docker、Python） |
+
+<div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-400 text-gray-700 text-sm text-left">
+💡 <b>GitHub 兩種都有：</b> GitHub 官方提供雲端的 remote server，也提供可以在本機執行的版本。新手建議用 remote，設定最簡單。
+</div>
+
+<!--
+MCP server 分成兩種。
+remote 是架在雲端的，opencode 透過網址連過去，你的電腦不用安裝任何東西。
+local 是在你的電腦上執行一支程式，好處是可以自己控制，缺點是要先安裝執行環境。
+GitHub 官方兩種都有提供，等一下兩種設定都會看到，但新手建議直接用 remote，最簡單。
 -->
 
 ---
@@ -142,161 +167,192 @@ layout: section
 class: flex flex-col justify-center items-center text-center
 ---
 
-# 2. 設定 MCP Server
-# Local vs Remote
+# 2. 準備 GitHub 權杖
+# Personal Access Token
 
 <!--
-MCP server 分成兩種類型，我們分別來看設定寫法，都以選品情境的服務當例子。
+要讓 AI 操作你的 GitHub，得先給它一把鑰匙。
 -->
 
 ---
 
-# Local MCP Server 設定
+# 建立 Personal Access Token
 
-「本機執行」的 MCP server，透過指令在你電腦上啟動一個小程式提供工具。以查詢 Google Trends 熱度為例（用免費的 `pytrends` 套件包裝）。
+權杖（token）就是讓 AI 代替你操作 GitHub 的鑰匙。建議用 **Fine-grained token**，只開放需要的權限。
 
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "servers": {
-      "trend-lookup": {
-        "type": "local",
-        "command": ["python", "trend_mcp_server.py"]
-      }
-    }
-  }
-}
-```
+| 步驟 | 說明 |
+| --- | --- |
+| 1. 進入設定 | GitHub 右上角頭像 → `Settings` → `Developer settings` |
+| 2. 建立權杖 | `Personal access tokens` → `Fine-grained tokens` → `Generate new token` |
+| 3. 設定到期日 | 練習用設 30 天就好 |
+| 4. 選擇 repo | `Only select repositories`，**只選你的練習專案** |
+| 5. 設定權限 | `Contents`：Read-only；`Issues`、`Pull requests`：Read and write |
 
 <div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-gray-700 text-sm text-left">
-⚠️ <b>新版格式：</b> MCP server 要放在 <code>mcp.servers</code> 底下。想暫時關掉某個 server，加上 <code>"disabled": true</code>（舊版的 <code>"enabled"</code> 已不使用）。
+⚠️ <b>權限開越小越安全：</b> 不要選 All repositories，也不要開用不到的權限。權杖只會顯示一次，記得馬上存好。
 </div>
 
 <!--
-Local 型的 MCP server，運作方式是 opencode 幫你在背景執行一個指令，這個指令會啟動一支小程式，持續跟 opencode 溝通、提供工具。
-這裡的例子是我們自己寫一支 Python 小程式，裡面用免費的 pytrends 套件去抓 Google Trends 的搜尋熱度資料，因為 Google Trends 沒有官方 API，只能靠這種方式包裝成本機服務。
-好處是完全免費、不用申請任何金鑰，command 欄位指定怎麼啟動這支程式就好，跟我們平常在終端機下指令的邏輯一樣。
-注意新版的格式，server 要放在 mcp 底下的 servers 裡面。網路上的舊教學會直接放在 mcp 底下，還會寫 enabled: true，那是舊版寫法。
+要讓 AI 代替你操作 GitHub，需要一把鑰匙，也就是 Personal Access Token，簡稱權杖。
+GitHub 的權杖有兩種，建議用 Fine-grained token，它可以精細地設定這把鑰匙能開哪些門。
+建立的路徑是：右上角頭像、Settings、最下面的 Developer settings，再選 Fine-grained tokens。
+有三個設定特別重要。第一，到期日，練習用的設 30 天就好，到期自動失效比較安全。第二，repo 的範圍，請只選你的練習專案，不要選全部。第三，權限，這門課需要讀取程式碼、讀寫 issue 跟 PR，其他都不要開。
+權限開越小，萬一 AI 做錯事，影響的範圍也越小。
 -->
 
 ---
 
-# trend_mcp_server.py 從哪來？
+# 把權杖存進環境變數
 
-這支程式不是現成的，我們可以請 opencode 幫忙寫，順便練習前面學到的技巧。
-
-```text
-請幫我寫一個 MCP server：trend_mcp_server.py
-- 使用 Python 官方的 MCP SDK（mcp 套件）
-- 提供一個工具 get_trend(keyword)，用 pytrends 查詢
-  這個關鍵字在台灣過去 12 個月的 Google 搜尋熱度
-- 回傳每個月的熱度數字
-- 寫完告訴我要安裝哪些套件、怎麼測試
-```
-
-<div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-gray-700 text-sm text-left">
-⚠️ <b>pytrends 不是官方工具：</b> 它是社群寫的套件，查太頻繁可能被 Google 暫時擋下（出現 429 錯誤），練習時查少量關鍵字就好。
-</div>
-
-<!--
-大家可能會好奇，trend_mcp_server.py 這支程式要去哪裡下載？答案是：沒有現成的，要自己寫。
-不過別擔心，我們手上就有一位 AI 工程師。這段 prompt 用了第 6 章的四要素寫法：目標是 MCP server，背景是 Python 官方的 MCP SDK 跟 pytrends，驗收標準是回傳每個月的熱度。
-提醒大家，pytrends 不是 Google 官方的工具，是社群寫的套件，查太頻繁可能會被 Google 暫時擋下來，練習的時候查幾個關鍵字就好。
--->
-
----
-
-# Remote MCP Server 設定
-
-「架設在雲端」的 MCP server，透過網址連線，不需要本機安裝執行檔。以 Meta Ad Library（查廣告投放熱度）為例。
-
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "servers": {
-      "meta-ad-library": {
-        "type": "remote",
-        // 範例網址，請換成實際的 server
-        "url": "https://mcp.example.com/meta-ad-library",
-        "headers": { "Authorization": "Bearer {env:META_AD_TOKEN}" }
-      }
-    }
-  }
-}
-```
-
-<div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-gray-700 text-sm text-left">
-⚠️ <b>MCP 會佔用上下文：</b> 接越多 MCP server，AI 能看到的工具越多，但也會吃掉更多對話上下文額度，選品情境建議只接真正會用到的 2–3 個資料源。
-</div>
-
-<!--
-Remote 型的則不用在本機跑任何程式，直接指定一個網址，opencode 透過網路連過去使用。
-這裡的網址 mcp.example.com 只是範例，實際使用時要換成你找到的 MCP server 網址。Meta Ad Library 本身免費、有官方 API，如果社群上已經有人包裝成 MCP server，我們只要填網址跟自己的存取權杖即可；權杖一樣用 {env:META_AD_TOKEN} 語法讀取環境變數，不要寫死在設定檔裡上傳到 GitHub。
-提醒一下，我們這堂課想接的是「搜尋熱度、廣告熱度、社群討論」三個資料源，接超過這個數量其實對選品判斷幫助有限，反而讓 AI 要消化的工具說明變多、變笨，抓重點資料源就好。
--->
-
----
-
-# 三個資料源的限制
-
-接之前先了解每個資料源能做到什麼、做不到什麼，AI 給的結論才不會被誤導。
-
-| 資料源 | 能查到 | 限制 |
-| --- | --- | --- |
-| Google Trends（pytrends） | 關鍵字的相對搜尋熱度 | 非官方套件，查太頻繁會被擋；只有相對數字，不是實際搜尋量 |
-| Meta Ad Library API | 廣告投放資料 | 官方 API 主要涵蓋社會議題、選舉、政治類廣告，以及投放到歐盟的廣告；一般商品廣告建議直接到 Ad Library 網站查看 |
-| Reddit API | 貼文與留言討論 | 需要 Reddit 帳號與授權；以英語使用者為主，不代表台灣市場 |
-
-<!--
-在讓 AI 下結論之前，我們要先知道每個資料源的限制。
-Google Trends 只給相對熱度，是零到一百的比較數字，不是實際搜尋次數。
-Meta Ad Library 的官方 API 有一個很大的限制：它主要提供社會議題、選舉、政治類的廣告，以及投放到歐盟的廣告。所以如果你要查一般商品在台灣的廣告，API 很可能查不到，建議直接到 Ad Library 的網站上手動查。
-Reddit 是英語社群為主，大家的討論不一定能代表台灣市場。
-了解這些限制，你才能判斷 AI 給的結論有幾分可信，這也是用 AI 做判斷時很重要的習慣。
--->
-
----
-layout: section
-class: flex flex-col justify-center items-center text-center
----
-
-# 3. 安裝與驗證
-# opencode mcp add
-
-<!--
-除了手動寫設定檔，也有指令可以引導完成設定，用 Reddit（查社群討論聲量）示範需要授權的情況。
--->
-
----
-
-# 用指令快速新增 MCP
-
-不想手寫設定檔，可以用 `opencode mcp add` 直接新增。以接上 Reddit（查社群討論聲量）為例。
+權杖不要寫在設定檔裡，用環境變數保存，設定檔再用 `{env:變數名稱}` 讀取。
 
 ```bash
-# 新增 remote 類型的 server（網址請換成實際的 server）
-opencode mcp add reddit-search --url https://mcp.example.com/reddit
+# macOS / Linux（寫進 ~/.zshrc 或 ~/.bashrc，之後每次開終端機都會有）
+export GITHUB_PAT="你的權杖"
 
-# 新增 local 類型的 server（-- 後面接啟動指令）
-opencode mcp add trend-lookup -- python trend_mcp_server.py
+# Windows PowerShell（設定為使用者環境變數，重開終端機後生效）
+[Environment]::SetEnvironmentVariable("GITHUB_PAT", "你的權杖", "User")
+```
 
-# 需要登入授權的 server，執行授權流程
-opencode mcp auth reddit-search
+<div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-gray-700 text-sm text-left">
+⚠️ <b>為什麼不直接寫進設定檔：</b> <code>opencode.jsonc</code> 通常會跟專案一起上傳到 GitHub，權杖寫在裡面等於公開給所有人。
+</div>
 
-# 查看目前接了哪些 server（在 TUI 裡也可以輸入 /mcps）
+<!--
+拿到權杖之後，不要直接貼進 opencode 的設定檔。因為設定檔通常會跟專案一起上傳到 GitHub，等於把鑰匙公開給全世界。
+正確的做法是存進環境變數。Mac 跟 Linux 把 export 這一行寫進 shell 的設定檔，像 .zshrc；Windows 用 PowerShell 這一行設定成使用者環境變數。
+設定好之後要重開終端機才會生效。等一下在 opencode 的設定檔裡，我們會用 {env:GITHUB_PAT} 這個寫法去讀它。
+-->
+
+---
+layout: section
+class: flex flex-col justify-center items-center text-center
+---
+
+# 3. 設定 GitHub MCP Server
+# Remote & Local
+
+<!--
+鑰匙準備好了，開始把 GitHub MCP server 接進 opencode。
+-->
+
+---
+
+# Remote 設定（建議）
+
+連到 GitHub 官方架設的 MCP server，電腦上不用安裝任何東西。
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "github": {
+        "type": "remote",
+        "url": "https://api.githubcopilot.com/mcp/",
+        "headers": { "Authorization": "Bearer {env:GITHUB_PAT}" },
+        "oauth": false  // 用權杖登入，關閉 OAuth 流程
+      }
+    }
+  }
+}
+```
+
+<!--
+這是最推薦的設定方式，寫在 opencode.jsonc 裡。
+所有 MCP server 都放在 mcp 底下的 servers 裡，這裡取名叫 github。
+type 是 remote，url 是 GitHub 官方 MCP server 的網址。
+headers 裡的 Authorization 會帶上你的權杖，{env:GITHUB_PAT} 代表從環境變數讀取，所以設定檔裡看不到真正的權杖。
+最後的 oauth: false，是因為 remote server 預設會走瀏覽器登入的 OAuth 流程，我們已經用權杖了，所以把它關掉。
+-->
+
+---
+
+# 縮小範圍：Toolsets 與唯讀模式
+
+GitHub MCP 的工具非常多，可以用 header 只開需要的部分。
+
+```jsonc
+"github": {
+  "type": "remote",
+  "url": "https://api.githubcopilot.com/mcp/",
+  "oauth": false,
+  "headers": {
+    "Authorization": "Bearer {env:GITHUB_PAT}",
+    // 只開這三組工具
+    "X-MCP-Toolsets": "repos,issues,pull_requests",
+    // 唯讀：只能看、不能改
+    "X-MCP-Readonly": "true"
+  }
+}
+```
+
+<div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-gray-700 text-sm text-left">
+⚠️ <b>MCP 會佔用上下文：</b> 每個工具的說明都會佔用 AI 的對話額度。工具開越多，AI 越容易選錯、也越快把上下文用完。
+</div>
+
+<!--
+GitHub 的 MCP server 工具非常多，有管 Actions 的、管安全性的、管專案看板的。全部打開的話，AI 光是讀工具說明就要花很多上下文。
+所以可以用兩個 header 縮小範圍。X-MCP-Toolsets 指定要開哪幾組工具，這門課用 repos、issues、pull_requests 三組就夠了。
+X-MCP-Readonly 設成 true，就變成唯讀模式，AI 只能看、不能改任何東西。剛開始練習的時候，建議先用唯讀模式熟悉，確定沒問題再拿掉。
+-->
+
+---
+
+# Local 設定（進階）
+
+在自己電腦上用 Docker 執行 GitHub 官方的 MCP server。
+
+```jsonc
+"github": {
+  "type": "local",
+  "command": [
+    "docker", "run", "-i", "--rm",
+    "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+    "ghcr.io/github/github-mcp-server"
+  ],
+  "environment": {
+    "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_PAT}"
+  }
+}
+```
+
+<div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-400 text-gray-700 text-sm text-left">
+💡 <b>什麼時候用 local：</b> 公司網路連不到 GitHub 的雲端 MCP，或想固定使用某個版本時。需要先安裝 Docker，新手用 remote 就好。
+</div>
+
+<!--
+這是 local 的設定方式，給大家參考。
+type 是 local，command 是啟動指令，這裡是用 Docker 執行 GitHub 官方發布的 MCP server 映像檔。
+environment 把我們的權杖傳給這支程式，名稱 GITHUB_PERSONAL_ACCESS_TOKEN 是 GitHub MCP server 規定的。
+local 的好處是可以自己控制版本，或是在 remote 連不到的環境使用，但需要先安裝 Docker。對新手來說，用 remote 就足夠了。
+-->
+
+---
+
+# 用指令新增與確認
+
+不想手寫設定檔，也可以用 `opencode mcp add` 新增，它會自動寫進設定檔。
+
+```bash
+# 新增 GitHub 的 remote server
+opencode mcp add github --url https://api.githubcopilot.com/mcp/ \
+  --header 'Authorization=Bearer {env:GITHUB_PAT}'
+
+# 查看目前接了哪些 server
 opencode mcp list
 ```
 
-<div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-400 text-gray-700 text-sm text-left">
-💡 <b>OAuth 授權：</b> remote server 預設會啟用 OAuth，執行 <code>opencode mcp auth</code> 會跳出瀏覽器讓你登入同意。如果該服務要求事先註冊 app（例如 Reddit），則需要在設定裡填入 <code>client_id</code> 等資訊。
-</div>
+| 檢查方式 | 做法 |
+| --- | --- |
+| 終端機 | `opencode mcp list`，看 `github` 有沒有出現 |
+| opencode 介面內 | 輸入 `/mcps` 查看連線狀態 |
+| 直接問 AI | 「你現在有哪些 GitHub 相關的工具可以用？」 |
 
 <!--
-不想手動寫設定檔的話，可以用 opencode mcp add。remote 類型用 --url 接網址；local 類型在兩個減號後面接啟動指令。執行後，opencode 會自動幫你寫進設定檔。
-需要登入的服務，再執行 opencode mcp auth，它會跳出瀏覽器讓你登入同意。不過要注意，有些服務像 Reddit，會要求你先到它的開發者頁面註冊一個 app，拿到 client id 之後才能授權，這時候就要把 client id 填進設定裡。
-最後，opencode mcp list 可以看目前接了哪些 server，在 opencode 的對話介面裡也可以輸入 /mcps 查看。
+除了手寫設定檔，也可以用 opencode mcp add 指令新增，--url 接網址，--header 接權杖的 header，執行後它會自動寫進設定檔。
+新增完要確認有沒有接成功，有三種方法：在終端機跑 opencode mcp list；在 opencode 介面裡輸入 /mcps；或者直接問 AI 現在有哪些 GitHub 的工具可以用。
+如果連不上，最常見的原因是環境變數沒設好，記得設定完要重開終端機。
 -->
 
 ---
@@ -308,56 +364,99 @@ class: flex flex-col justify-center items-center text-center
 # Use & Control Access
 
 <!--
-三個資料源都接上之後，來看怎麼實際用、怎麼管控。
+接上之後，來看怎麼用，以及怎麼控制 AI 能做什麼。
 -->
 
 ---
 
-# 在對話中使用 MCP 工具
+# 在對話中使用 GitHub 工具
 
-三個 MCP 接上後會自動出現在 AI 可用的工具清單裡，直接描述選品需求即可，AI 會自己判斷該查哪個工具。
+接上之後不用記工具名稱，直接用自然語言描述，AI 會自己判斷要用哪個工具。
 
 ```text
-我在考慮賣「露營用可折疊爐具」，
-幫我查一下搜尋熱度、有沒有競品在投廣告、
-Reddit 上大家怎麼討論，綜合判斷值不值得做
+幫我列出 my-todo-app 這個 repo 還沒關閉的 issue，
+依照難易度排序，告訴我建議先處理哪一個
 ```
 
-| 管理方式 | 設定寫法 |
-| --- | --- |
-| 暫時關掉整個 server | 在該 server 設定加上 `"disabled": true` |
-| 禁止使用某個 server 的工具 | `"permissions": [{ "action": "meta-ad-library_*", "resource": "*", "effect": "deny" }]` |
-| 特定 agent 才開放 | 在 `agents.<id>.permissions` 裡把同一條規則設成 `allow` |
+```text
+（先按 Shift+Tab 切到 plan）
+讀一下 issue #3 的內容，告訴我你打算怎麼修改程式
+```
+
+```text
+我剛發現按下刪除鍵後畫面沒有更新，
+幫我開一個 issue 記錄這個 bug，標題和描述用繁體中文
+```
 
 <!--
-平常我們不用特別去記工具名稱，opencode 對話時會自動判斷需要用哪個 MCP 工具：想查熱度就用 trend-lookup、想查廣告就用 meta-ad-library、想查討論就用 reddit-search，一句話同時觸發三個工具、交叉比對三份數據，這就是 MCP 接上之後的價值。
-權限管理的邏輯跟前一堂課的 Skill 一樣，都是用 permissions 規則。MCP 工具的 action 名稱是「server 名稱、底線、工具名稱」，所以 meta-ad-library_* 就代表這個 server 的所有工具。可以先在全域把它設成 deny，再針對特定的 agent 設成 allow，做到「預設收緊、按需開放」的管理方式，避免不必要的工具權限被濫用，例如廣告資料只給行銷用的 agent 開放。
+接上 GitHub MCP 之後，用法跟平常聊天一樣，直接說你要做什麼就好。
+第一個例子，請 AI 列出還沒處理的 issue，還請它依難易度排序、給建議，這對新手決定先做什麼很有幫助。
+第二個例子，請 AI 讀一個 issue，然後搭配前面學過的 plan 模式，先看它打算怎麼改。
+第三個例子，請 AI 幫你開一個 issue 記錄 bug，以後就不用自己到網頁上填表單了。
+-->
+
+---
+
+# 權限管理：讓 AI 先問過你
+
+原則是「**讀取放行、寫入先問、危險禁止**」。每條規則的格式：`{ "action": "github_issue_write", "resource": "*", "effect": "ask" }`，放進 `"permissions": [ ... ]` 陣列。
+
+| 順序 | `action`（server 名稱_工具名稱） | `effect` | 意思 |
+| --- | --- | --- | --- |
+| 1 | `github_*` | `allow` | 先全部放行（讀 issue、看程式碼…） |
+| 2 | `github_issue_write` | `ask` | 開／改 issue 前先問你 |
+| 3 | `github_create_pull_request` | `ask` | 開 PR 前先問你 |
+| 4 | `github_merge_pull_request` | `deny` | 禁止合併 PR |
+
+<div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-gray-700 text-sm text-left">
+⚠️ <b>後面的規則優先：</b> 所以「全部放行」要寫在最前面。工具名稱可能隨版本調整，可以先問 AI 它看到的工具名稱。
+</div>
+
+<!--
+AI 能直接操作 GitHub，代表它也可能做錯事，例如不小心合併了不該合併的 PR，所以權限管理一定要設。
+跟前一堂課的 Skill 一樣，用 permissions 規則來管理。MCP 工具的 action 名稱，是 server 名稱、底線、工具名稱，我們的 server 叫 github，所以就是 github_ 開頭。
+建議的原則是：讀取放行、寫入先問、危險禁止。範例中，先把所有 github 工具放行，再把寫 issue 跟開 PR 設成 ask，每次都要你同意；合併 PR 直接 deny，AI 完全不能做。如果還有其他危險的工具，例如刪除檔案，也可以照同樣方式加上 deny。
+注意規則是由上往下比對、後面的優先，所以「全部放行」要寫在最前面。
+另外，GitHub MCP 的工具名稱偶爾會調整，如果規則沒生效，可以先問 AI 它看到的工具名稱是什麼。
 -->
 
 ---
 layout: default
 ---
 
-# 練習：用三個免費 API 做一次選品驗證
+# 練習：用 issue 驅動你的開發
+
 ### 任務說明
 
-在 `opencode.jsonc` 接上 `trend-lookup`（Google Trends）、`meta-ad-library`、`reddit-search` 三個 MCP，針對自己想到的一個商品點子，請 opencode 綜合三份資料給出「值不值得做」的判斷。
+1. 在 GitHub 建立一個練習 repo（例如第 6 章做的待辦清單），手動開 2～3 個 issue 寫下想加的功能
+2. 建立一個**只能存取這個 repo** 的 Fine-grained token，存進環境變數
+3. 用 remote 方式接上 GitHub MCP，先開啟 `X-MCP-Readonly` 唯讀模式
+4. 請 AI 列出所有 issue 並建議處理順序，再挑一個 issue 用 `plan` 模式討論做法
+
+<!--
+這個練習會用到前面好幾章的內容。
+先在 GitHub 建一個練習 repo，可以用第 6 章做的待辦清單，自己開幾個 issue，寫下想加的功能。
+接著建立權杖、接上 GitHub MCP，一開始先用唯讀模式，確定 AI 只能看、不能改。
+最後請 AI 讀 issue、排優先順序，再挑一個用 plan 模式討論做法。
+-->
 
 ---
 layout: default
 ---
 
-# 練習：用三個免費 API 做一次選品驗證
+# 練習：用 issue 驅動你的開發
+
 ### 解題提示
 
-1. 先請 opencode 寫好 `trend_mcp_server.py`，再接上 `trend-lookup`（local，免驗證），確認能查到搜尋熱度資料
-2. 再接 `reddit-search`（remote，需 OAuth），跑一次 `opencode mcp auth reddit-search`
-3. 有申請到 Meta 權杖的話，把 `meta-ad-library` 也接上；沒有的話先跳過，或請 AI 改用「手動到 Ad Library 網站查到的結果」當作第三份資料
-4. 在對話中具體描述商品點子，讓 AI 自動判斷該呼叫哪些工具，並要求它列出「三份數據分別說了什麼」再下結論
+1. 權杖的 repo 範圍選 `Only select repositories`，權限只開 Contents、Issues、Pull requests
+2. 設定完環境變數要**重開終端機**，再用 `opencode mcp list` 確認 `github` 有連上
+3. 唯讀模式下請 AI 開 issue，觀察它會怎麼回應（應該會說沒有權限）
+4. 熟悉之後拿掉唯讀模式、加上權限規則，再請 AI 幫你開一個 issue，看它會不會先問你
 
 <!--
-這個練習讓大家實際體驗一次「幫 AI 接上選品裝備」的完整流程。
-提醒大家，先從免驗證的 trend-lookup 開始練習，比較不會卡在授權流程上，等熟悉了流程之後，再挑戰需要 OAuth 或 API 金鑰的服務。
+提示第三點很有趣：在唯讀模式下故意請 AI 開 issue，它應該會告訴你沒有權限，這可以讓你親眼確認唯讀模式真的有效。
+第四點則是熟悉之後，拿掉唯讀、加上權限規則，再請它開 issue，這時候 opencode 應該會先跳出來問你同不同意。
+兩種保護方式都體驗過，你就知道怎麼在方便跟安全之間取得平衡。
 -->
 
 ---
@@ -368,8 +467,8 @@ layout: end
 ### 下一步：學會怎麼跟 AI 說話，開始真正的 Vibe Coding！
 
 <!--
-今天我們用「AI 選品」這個實戰情境，認識了 MCP：它是什麼、怎麼設定 local 跟 remote 兩種 server、怎麼安裝授權、怎麼在對話中使用並控管權限。
-回顧一下整個系列，我們從安裝 opencode 開始，接上 Mistral 拿到 AI 大腦，學會用 Skill 記住固定流程，最後用 MCP 接上外部世界的工具箱，甚至實際做了一次選品驗證。
+今天我們用 GitHub 當例子認識了 MCP：它是什麼、remote 跟 local 兩種 server 怎麼設定、怎麼建立權杖、怎麼在對話中使用，以及怎麼用權限規則控制 AI 能做的事。
+回顧一下整個系列，我們從安裝 opencode 開始，接上 Mistral 拿到 AI 大腦，學會用 Skill 記住固定流程，最後用 MCP 接上 GitHub 這個外部工具箱。
 現在，opencode 已經是一位裝備齊全、隨時待命的 AI 工程師夥伴了。
 下一堂課開始，我們要學怎麼跟這位夥伴合作：把需求講清楚、先規劃再動手，正式進入 vibe coding！
 -->
