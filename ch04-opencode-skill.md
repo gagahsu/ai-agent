@@ -116,37 +116,38 @@ class: flex flex-col justify-center items-center text-center
 
 # SKILL.md 檔案規則
 
-每個 Skill 是一個資料夾，裡面必須有一份 `SKILL.md`，開頭要有 YAML frontmatter。
+每個 Skill 是一個資料夾，裡面放一份 `SKILL.md`，開頭用 YAML frontmatter 寫基本資訊。
 
-| 欄位 | 必填 | 說明 |
+| 欄位 | 重要性 | 說明 |
 | --- | --- | --- |
-| `name` | 必填 | 1–64 字元，小寫英數字加連字號 |
-| `description` | 必填 | 說明用途，AI 靠這段判斷何時該用 |
-| `license` | 選填 | 授權條款 |
-| `metadata` | 選填 | 自訂的字串對照表 |
+| `description` | ⭐ 一定要寫 | 說明用途，AI 靠這段判斷何時該用；沒寫的話 AI 看不到這個 Skill |
+| `name` | 建議寫 | 顯示用的名稱 |
+| `disable-model-invocation` | 選填 | 設成 `true`，AI 就不會自動使用，只能由你手動叫用 |
+| `metadata` | 選填 | 自訂的資訊 |
 
 <div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-gray-700 text-sm text-left">
-⚠️ <b>資料夾名稱要跟 name 一致：</b> 例如 <code>name: caveman</code>，資料夾就必須叫 <code>caveman</code>，兩者對不上會抓不到。
+⚠️ <b>Skill 的 ID 是資料夾名稱：</b> 例如放在 <code>.opencode/skills/caveman/SKILL.md</code>，這個 Skill 的 ID 就是 <code>caveman</code>。權限設定、手動叫用都是用這個 ID。
 </div>
 
 <!--
 一份 Skill 其實就是一個資料夾加一份 Markdown 文件。
-最重要的兩個欄位是 name 跟 description：name 是這個 Skill 的代號，會拿來對照資料夾名稱；description 則決定了 AI「什麼時候該想到用這個 Skill」，寫得越具體，AI 判斷得越準。
-特別提醒一個常見的錯誤：資料夾名稱一定要跟 frontmatter 裡的 name 完全一樣，opencode 是靠這個對照才找得到，如果 description 沒寫，這個 Skill 甚至不會被 AI 看見。
+最重要的欄位是 description，它決定了 AI「什麼時候該想到用這個 Skill」，寫得越具體，AI 判斷得越準。如果 description 沒寫，這個 Skill 甚至不會被 AI 看見。
+name 只是顯示用的名稱。Skill 真正的 ID 是它的資料夾名稱，例如資料夾叫 caveman，ID 就是 caveman，之後設定權限、手動叫用都是用這個 ID。
+如果有些 Skill 你不希望 AI 自己決定要不要用，可以加上 disable-model-invocation: true，這樣只有你手動叫用時才會載入。
 -->
 
 ---
 
 # SKILL.md — 範例
 
-以本堂課全程示範用的「caveman」壓縮語氣 Skill 為例：
+以本堂課全程示範用的「caveman」壓縮語氣 Skill 為例，存成 `.opencode/skills/caveman/SKILL.md`：
 
 ```yaml
 ---
 name: caveman
 description: 超壓縮溝通模式，砍掉贅字但保留完整技術內容，
   可省下約 75% token。支援 lite/full/ultra 三種強度。
-  使用者說「講話省一點」「caveman 模式」或打 /caveman 時觸發。
+  使用者說「講話省一點」「caveman 模式」時使用。
 metadata:
   intensity: lite | full | ultra
 ---
@@ -156,7 +157,7 @@ metadata:
 - 遇到安全警告、需使用者確認的動作，自動切回正常語氣
 
 ## 使用時機
-使用者要求省 token、講話簡短，或輸入 /caveman 時使用。
+使用者要求省 token、講話簡短，或輸入 @caveman 時使用。
 ```
 
 <!--
@@ -184,10 +185,10 @@ opencode 會依序尋找以下路徑，分成「專案層級」與「全域層�
 
 | 層級 | 路徑 |
 | --- | --- |
-| 專案層級 | `.opencode/skills/<name>/SKILL.md` |
-| 全域層級 | `~/.config/opencode/skills/<name>/SKILL.md` |
-| 相容 Claude 專案層級 | `.claude/skills/<name>/SKILL.md` |
-| 相容 Claude 全域層級 | `~/.claude/skills/<name>/SKILL.md` |
+| 專案層級 | `.opencode/skills/<id>/SKILL.md` |
+| 全域層級 | `~/.config/opencode/skills/<id>/SKILL.md` |
+| 相容專案層級 | `.claude/skills/<id>/SKILL.md`、`.agents/skills/<id>/SKILL.md` |
+| 相容全域層級 | `~/.claude/skills/<id>/SKILL.md`、`~/.agents/skills/<id>/SKILL.md` |
 
 <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-400 text-gray-700 text-sm text-left">
 💡 <b>安裝就是「放對資料夾」：</b> Skill 沒有專屬安裝指令，只要把資料夾放進上述任一路徑，opencode 下次啟動就會自動偵測到。
@@ -197,23 +198,29 @@ opencode 會依序尋找以下路徑，分成「專案層級」與「全域層�
 Skill 的「安裝」其實非常單純：不需要下載或執行任何安裝指令，只要把整個資料夾放進 opencode 會搜尋的路徑，它就自動生效了。
 專案層級放在 .opencode/skills 底下，適合只給這個專案用、要進版本控制跟團隊共用的 Skill。
 全域層級放在使用者家目錄的 .config/opencode/skills 底下，這樣不管開哪個專案都能用，適合個人習慣的通用技能。
-opencode 也貼心相容了 Claude 的 skills 資料夾格式，如果你原本就有 Claude 的 Skill，直接放同一個位置兩邊都能吃到。
+opencode 也相容 .claude/skills 和 .agents/skills 這兩種資料夾，如果你原本就有給 Claude Code 或其他工具用的 Skill，放在原本的位置，opencode 也讀得到。
 -->
 
 ---
 
-# 補充：Plugin 提供的 Skill
+# 補充：從其他地方載入 Skill
 
-有些 Skill 不是自己寫的資料夾，而是「隨 Plugin 一起安裝」，名稱會變成 `plugin:skill` 格式，例如我們示範用的 `caveman:caveman`。
+除了放進固定資料夾，也可以在 `opencode.jsonc` 用 `skills` 陣列指定額外的來源。
 
-| 類型 | 名稱格式 | 安裝方式 |
-| --- | --- | --- |
-| 本機 Skill | `skill-name` | 手動放資料夾 |
-| Plugin Skill | `plugin-name:skill-name` | 安裝該 plugin，Skill 隨之附帶 |
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "skills": [
+    "../team-shared/skills",            // 本機的其他資料夾
+    "https://example.com/skills/"       // 網路上的 Skill 目錄（需提供 index.json）
+  ]
+}
+```
 
 <!--
-除了自己手寫資料夾，還有一種常見情況：Skill 是跟著一整包 Plugin 一起裝進來的，這時候名稱前面會多一段 plugin 名稱當前綴，用冒號隔開，像 caveman:caveman 就是「caveman 這個 plugin 裡，名叫 caveman 的 skill」。
-這種情況不用自己手動放資料夾，只要裝了對應的 plugin，裡面的 Skill 就自動可以用，等於買了一整組工具箱，裡面已經附好工具，不用自己一支一支組裝。
+除了放進固定的資料夾，還可以在設定檔裡用 skills 陣列指定額外的來源。
+可以是電腦上的其他資料夾，例如團隊共用的 Skill 放在另一個 repo；也可以是網路上的 Skill 目錄，只要對方有提供 index.json 清單。
+這樣就不用每個專案都複製一份，等於大家共用同一個食譜櫃。這個用法大家先知道就好，範例網址要換成實際的位置。
 -->
 
 ---
@@ -232,7 +239,7 @@ class: flex flex-col justify-center items-center text-center
 
 # 呼叫方式 — 以 caveman 為例
 
-opencode 會透過內建的 `skill` 工具自動判斷並載入合適的 Skill，不用手動指名也能觸發。
+opencode 會透過內建的 `skill` 工具自動判斷並載入合適的 Skill；也可以在對話中打 `@caveman` 手動指名。
 
 ```text
 使用者：講話幫我省一點，開 caveman full 模式
@@ -245,6 +252,7 @@ Bug 在 auth middleware。Token 過期檢查用了 `<` 該用 `<=`。修正：
 這一頁我們實際看一次 caveman skill 被觸發的樣子。
 使用者只要說出「講話省一點」「caveman 模式」這類字眼，opencode 就會自己比對所有已安裝 Skill 的 description，發現 caveman 這份符合，自動載入內文的壓縮規則，之後的回覆就會照這套規則變成短句、去贅字，但技術內容完全不打折。
 整個過程使用者完全不用打開 SKILL.md 看內容，這就是 Skill「隨插即用」的價值。
+如果想確定用到某個 Skill，也可以直接在對話裡打 @ 加上 Skill 的 ID，例如 @caveman，手動指名載入。
 -->
 
 ---
@@ -253,40 +261,51 @@ Bug 在 auth middleware。Token 過期檢查用了 `<` 該用 `<=`。修正：
 
 有些 Skill 比較敏感、或還在測試階段，可以用權限規則限制何時能自動套用。
 
-```json
+```jsonc
 {
-  "permission": {
-    "skill": {
-      "*": "allow",
-      "caveman*": "ask",
-      "internal-*": "deny"
-    }
-  }
+  "$schema": "https://opencode.ai/config.json",
+  // 規則由上往下比對，後面的規則優先
+  "permissions": [
+    { "action": "skill", "resource": "*", "effect": "allow" },
+    { "action": "skill", "resource": "caveman*", "effect": "ask" },
+    { "action": "skill", "resource": "internal-*", "effect": "deny" }
+  ]
 }
 ```
 
 <div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-gray-700 text-sm text-left">
-⚠️ <b>完全關閉 Skill 功能：</b> 若某個 agent 完全不想用到任何 Skill，可在該 agent 設定裡加上 <code>"skill": false</code>。
+⚠️ <b>舊版寫法已淘汰：</b> 網路上常見的 <code>"permission": { "skill": {...} }</code> 是舊版（V1）格式。新版用 <code>permissions</code> 陣列，也可以寫在個別 agent 的設定裡（<code>agents.&lt;id&gt;.permissions</code>）。
 </div>
 
 <!--
-如果團隊裡有些 Skill 比較敏感，不想讓它隨便自動執行，可以用 permission 規則管理：allow 代表直接放行，deny 代表完全隱藏不讓 AI 看到，ask 則是每次使用前都要先問過你。
-像範例這樣，把 caveman 開頭的設成 ask，等於「AI 想切換成省話語氣前，要先問過我同不同意」，而內部測試用的 internal- 開頭則直接 deny，其餘全部 allow。
+如果團隊裡有些 Skill 比較敏感，不想讓它隨便自動執行，可以用 permissions 規則管理。每一條規則有三個欄位：action 是動作類型，這裡是 skill；resource 是 Skill 的 ID，可以用星號當萬用字元；effect 是效果，allow 直接放行，deny 完全禁止，ask 每次使用前先問你。
+規則是由上往下比對，越後面的規則越優先。像範例這樣，先全部 allow，再把 caveman 開頭的設成 ask，等於「AI 想切換成省話語氣前，要先問過我同不同意」，而內部測試用的 internal- 開頭則直接 deny。
+提醒大家，網路上很多教學還是舊版的寫法，看到 permission 單數、後面接物件的，那是舊格式，新版要用 permissions 陣列。
 -->
 
 ---
 
-# 用 CLI 確認已安裝的 Skill
+# 確認 Skill 有被抓到
 
-安裝完想確認 opencode 有沒有抓到，可以用指令查看。
+放好資料夾之後，可以用這兩個方法確認 opencode 有沒有偵測到。
 
-```bash
-# 啟動 opencode 後，在對話框輸入
-/skills
+```text
+# 方法一：直接問 AI
+你目前有哪些可以用的 skill？
+
+# 方法二：用 @ 手動指名，看它有沒有照 Skill 的規則回答
+@caveman 解釋一下這個專案的資料夾結構
 ```
 
+<div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-gray-700 text-sm text-left">
+⚠️ <b>新增或修改 Skill 後：</b> 建議重新啟動 opencode 或開新對話（<code>/new</code>），確保讀到最新的內容。
+</div>
+
 <!--
-裝完 Skill 心裡毛毛的、不確定有沒有生效，很正常，這裡教大家一個檢查方式：直接在對話框打 /skills，opencode 會列出目前偵測到的所有 Skill，caveman 這種 plugin 提供的也會列在裡面，看到它就代表裝成功了。
+裝完 Skill 心裡毛毛的、不確定有沒有生效，很正常，這裡教大家兩個檢查方式。
+第一個最簡單，直接問 AI 目前有哪些可以用的 skill，它看得到每個 Skill 的 description，會列給你看。
+第二個是用 @ 手動指名，例如打 @caveman 再接一個問題，如果回答變成精簡的省話語氣，就代表 Skill 有被讀到。
+另外，新增或修改 Skill 之後，建議重新啟動 opencode 或開個新對話，確保它讀到的是最新的內容。
 -->
 
 ---
@@ -296,7 +315,7 @@ layout: default
 # 練習：體驗並仿寫 caveman Skill
 ### 任務說明
 
-先在 opencode 對話框打字觸發本堂課示範用的 caveman skill，感受壓縮語氣的效果；接著仿照它的結構，寫一份 `.opencode/skills/pr-checklist/SKILL.md`，內容是「開 PR 前的自我檢查清單」（跑哪些測試指令、commit message 格式規則）。
+先把本堂課的 caveman 範例存成 `.opencode/skills/caveman/SKILL.md`，在 opencode 對話框打字觸發它，感受壓縮語氣的效果；接著仿照它的結構，寫一份 `.opencode/skills/pr-checklist/SKILL.md`，內容是「開 PR 前的自我檢查清單」（跑哪些測試指令、commit message 格式規則）。
 
 ---
 layout: default
@@ -308,11 +327,11 @@ layout: default
 1. 先打「講話幫我省一點」或「caveman 模式」，觀察 AI 回覆語氣的變化，確認 Skill 真的被載入了
 2. 仿照 caveman 的 frontmatter 寫法，想清楚 `description` 要怎麼寫，才能讓 AI 準確判斷「開 PR 前」該用你的 Skill
 3. 內文條列出檢查項目，例如跑 lint、跑測試、確認 commit message 格式
-4. 存到 `.opencode/skills/pr-checklist/SKILL.md`，資料夾名稱記得跟 `name` 對齊
+4. 存到 `.opencode/skills/pr-checklist/SKILL.md`，資料夾名稱 `pr-checklist` 就是這個 Skill 的 ID
 5. 啟動 opencode，跟它說「我要開 PR 了，幫我檢查一下」，看它有沒有自動套用這份 Skill
 
 <!--
-這個練習分兩步：先體驗別人寫好的 caveman skill 長什麼感覺，再仿照同樣的結構自己寫一份。
+這個練習分兩步：先把範例的 caveman skill 存起來，體驗它長什麼感覺，再仿照同樣的結構自己寫一份。
 重點提示一下，description 是關鍵中的關鍵，寫得夠具體，AI 才會在對的時機把這份 Skill 抽出來用，就跟 caveman 那份寫「使用者說想省 token 時觸發」一樣明確。
 -->
 

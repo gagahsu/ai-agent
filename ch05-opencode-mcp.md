@@ -155,22 +155,54 @@ MCP server 分成兩種類型，我們分別來看設定寫法，都以選品情
 
 「本機執行」的 MCP server，透過指令在你電腦上啟動一個小程式提供工具。以查詢 Google Trends 熱度為例（用免費的 `pytrends` 套件包裝）。
 
-```json
+```jsonc
 {
+  "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "trend-lookup": {
-      "type": "local",
-      "command": ["python", "trend_mcp_server.py"],
-      "enabled": true
+    "servers": {
+      "trend-lookup": {
+        "type": "local",
+        "command": ["python", "trend_mcp_server.py"]
+      }
     }
   }
 }
 ```
 
+<div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-gray-700 text-sm text-left">
+⚠️ <b>新版格式：</b> MCP server 要放在 <code>mcp.servers</code> 底下。想暫時關掉某個 server，加上 <code>"disabled": true</code>（舊版的 <code>"enabled"</code> 已不使用）。
+</div>
+
 <!--
 Local 型的 MCP server，運作方式是 opencode 幫你在背景執行一個指令，這個指令會啟動一支小程式，持續跟 opencode 溝通、提供工具。
 這裡的例子是我們自己寫一支 Python 小程式，裡面用免費的 pytrends 套件去抓 Google Trends 的搜尋熱度資料，因為 Google Trends 沒有官方 API，只能靠這種方式包裝成本機服務。
 好處是完全免費、不用申請任何金鑰，command 欄位指定怎麼啟動這支程式就好，跟我們平常在終端機下指令的邏輯一樣。
+注意新版的格式，server 要放在 mcp 底下的 servers 裡面。網路上的舊教學會直接放在 mcp 底下，還會寫 enabled: true，那是舊版寫法。
+-->
+
+---
+
+# trend_mcp_server.py 從哪來？
+
+這支程式不是現成的，我們可以請 opencode 幫忙寫，順便練習前面學到的技巧。
+
+```text
+請幫我寫一個 MCP server：trend_mcp_server.py
+- 使用 Python 官方的 MCP SDK（mcp 套件）
+- 提供一個工具 get_trend(keyword)，用 pytrends 查詢
+  這個關鍵字在台灣過去 12 個月的 Google 搜尋熱度
+- 回傳每個月的熱度數字
+- 寫完告訴我要安裝哪些套件、怎麼測試
+```
+
+<div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-gray-700 text-sm text-left">
+⚠️ <b>pytrends 不是官方工具：</b> 它是社群寫的套件，查太頻繁可能被 Google 暫時擋下（出現 429 錯誤），練習時查少量關鍵字就好。
+</div>
+
+<!--
+大家可能會好奇，trend_mcp_server.py 這支程式要去哪裡下載？答案是：沒有現成的，要自己寫。
+不過別擔心，我們手上就有一位 AI 工程師。這段 prompt 用了第 6 章的四要素寫法：目標是 MCP server，背景是 Python 官方的 MCP SDK 跟 pytrends，驗收標準是回傳每個月的熱度。
+提醒大家，pytrends 不是 Google 官方的工具，是社群寫的套件，查太頻繁可能會被 Google 暫時擋下來，練習的時候查幾個關鍵字就好。
 -->
 
 ---
@@ -179,14 +211,16 @@ Local 型的 MCP server，運作方式是 opencode 幫你在背景執行一個�
 
 「架設在雲端」的 MCP server，透過網址連線，不需要本機安裝執行檔。以 Meta Ad Library（查廣告投放熱度）為例。
 
-```json
+```jsonc
 {
+  "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "meta-ad-library": {
-      "type": "remote",
-      "url": "https://mcp.example.com/meta-ad-library",
-      "headers": {
-        "Authorization": "Bearer {env:META_AD_TOKEN}"
+    "servers": {
+      "meta-ad-library": {
+        "type": "remote",
+        // 範例網址，請換成實際的 server
+        "url": "https://mcp.example.com/meta-ad-library",
+        "headers": { "Authorization": "Bearer {env:META_AD_TOKEN}" }
       }
     }
   }
@@ -199,8 +233,28 @@ Local 型的 MCP server，運作方式是 opencode 幫你在背景執行一個�
 
 <!--
 Remote 型的則不用在本機跑任何程式，直接指定一個網址，opencode 透過網路連過去使用。
-Meta Ad Library 本身免費、有官方 API，如果社群上已經有人包裝成 MCP server，我們只要填網址跟自己的存取權杖即可；權杖一樣用 {env:META_AD_TOKEN} 語法讀取環境變數，不要寫死在設定檔裡上傳到 GitHub。
+這裡的網址 mcp.example.com 只是範例，實際使用時要換成你找到的 MCP server 網址。Meta Ad Library 本身免費、有官方 API，如果社群上已經有人包裝成 MCP server，我們只要填網址跟自己的存取權杖即可；權杖一樣用 {env:META_AD_TOKEN} 語法讀取環境變數，不要寫死在設定檔裡上傳到 GitHub。
 提醒一下，我們這堂課想接的是「搜尋熱度、廣告熱度、社群討論」三個資料源，接超過這個數量其實對選品判斷幫助有限，反而讓 AI 要消化的工具說明變多、變笨，抓重點資料源就好。
+-->
+
+---
+
+# 三個資料源的限制
+
+接之前先了解每個資料源能做到什麼、做不到什麼，AI 給的結論才不會被誤導。
+
+| 資料源 | 能查到 | 限制 |
+| --- | --- | --- |
+| Google Trends（pytrends） | 關鍵字的相對搜尋熱度 | 非官方套件，查太頻繁會被擋；只有相對數字，不是實際搜尋量 |
+| Meta Ad Library API | 廣告投放資料 | 官方 API 主要涵蓋社會議題、選舉、政治類廣告，以及投放到歐盟的廣告；一般商品廣告建議直接到 Ad Library 網站查看 |
+| Reddit API | 貼文與留言討論 | 需要 Reddit 帳號與授權；以英語使用者為主，不代表台灣市場 |
+
+<!--
+在讓 AI 下結論之前，我們要先知道每個資料源的限制。
+Google Trends 只給相對熱度，是零到一百的比較數字，不是實際搜尋次數。
+Meta Ad Library 的官方 API 有一個很大的限制：它主要提供社會議題、選舉、政治類的廣告，以及投放到歐盟的廣告。所以如果你要查一般商品在台灣的廣告，API 很可能查不到，建議直接到 Ad Library 的網站上手動查。
+Reddit 是英語社群為主，大家的討論不一定能代表台灣市場。
+了解這些限制，你才能判斷 AI 給的結論有幾分可信，這也是用 AI 做判斷時很重要的習慣。
 -->
 
 ---
@@ -219,23 +273,30 @@ class: flex flex-col justify-center items-center text-center
 
 # 用指令快速新增 MCP
 
-`opencode mcp add` 會用互動精靈引導完成新增，若需要授權則用 `opencode mcp auth`。以接上 Reddit（查社群討論聲量）為例，Reddit API 免費但需要 OAuth 登入。
+不想手寫設定檔，可以用 `opencode mcp add` 直接新增。以接上 Reddit（查社群討論聲量）為例。
 
 ```bash
-# 互動式新增 reddit-search 這個 MCP server
-opencode mcp add
+# 新增 remote 類型的 server（網址請換成實際的 server）
+opencode mcp add reddit-search --url https://mcp.example.com/reddit
 
-# Reddit 需要 OAuth 授權，另外執行
+# 新增 local 類型的 server（-- 後面接啟動指令）
+opencode mcp add trend-lookup -- python trend_mcp_server.py
+
+# 需要登入授權的 server，執行授權流程
 opencode mcp auth reddit-search
+
+# 查看目前接了哪些 server（在 TUI 裡也可以輸入 /mcps）
+opencode mcp list
 ```
 
 <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-400 text-gray-700 text-sm text-left">
-💡 <b>OAuth 通常免設定：</b> 像 Reddit 這類需要登入授權的服務，opencode 會自動偵測並跳出瀏覽器完成授權，不用手動貼 client id / secret。
+💡 <b>OAuth 授權：</b> remote server 預設會啟用 OAuth，執行 <code>opencode mcp auth</code> 會跳出瀏覽器讓你登入同意。如果該服務要求事先註冊 app（例如 Reddit），則需要在設定裡填入 <code>client_id</code> 等資訊。
 </div>
 
 <!--
-不想手動寫 JSON 的話，直接打 opencode mcp add，它會一步步問你要接哪種類型的 server、名稱是什麼、指令或網址是什麼，跟著問答完成就好。
-Reddit API 免費層額度夠我們選品練習用，但需要登入 Reddit 帳號完成 OAuth 授權，opencode mcp auth reddit-search 會自動跳出瀏覽器讓你登入同意，不需要自己去申請 client id、client secret 這些進階資訊。
+不想手動寫設定檔的話，可以用 opencode mcp add。remote 類型用 --url 接網址；local 類型在兩個減號後面接啟動指令。執行後，opencode 會自動幫你寫進設定檔。
+需要登入的服務，再執行 opencode mcp auth，它會跳出瀏覽器讓你登入同意。不過要注意，有些服務像 Reddit，會要求你先到它的開發者頁面註冊一個 app，拿到 client id 之後才能授權，這時候就要把 client id 填進設定裡。
+最後，opencode mcp list 可以看目前接了哪些 server，在 opencode 的對話介面裡也可以輸入 /mcps 查看。
 -->
 
 ---
@@ -264,12 +325,13 @@ Reddit 上大家怎麼討論，綜合判斷值不值得做
 
 | 管理方式 | 設定寫法 |
 | --- | --- |
-| 全域關閉某個 MCP | `"tools": { "meta-ad-library*": false }` |
-| 特定 agent 才開放 | 在 agent 設定內覆寫 `tools` 為 `true` |
+| 暫時關掉整個 server | 在該 server 設定加上 `"disabled": true` |
+| 禁止使用某個 server 的工具 | `"permissions": [{ "action": "meta-ad-library_*", "resource": "*", "effect": "deny" }]` |
+| 特定 agent 才開放 | 在 `agents.<id>.permissions` 裡把同一條規則設成 `allow` |
 
 <!--
 平常我們不用特別去記工具名稱，opencode 對話時會自動判斷需要用哪個 MCP 工具：想查熱度就用 trend-lookup、想查廣告就用 meta-ad-library、想查討論就用 reddit-search，一句話同時觸發三個工具、交叉比對三份數據，這就是 MCP 接上之後的價值。
-權限管理的邏輯跟前一堂課的 Skill 很類似：可以先在全域把某個 MCP 工具整組關掉，再針對特定的 agent 開放使用，做到「預設收緊、按需開放」的管理方式，避免不必要的工具權限被濫用，例如廣告資料只給行銷用的 agent 開放。
+權限管理的邏輯跟前一堂課的 Skill 一樣，都是用 permissions 規則。MCP 工具的 action 名稱是「server 名稱、底線、工具名稱」，所以 meta-ad-library_* 就代表這個 server 的所有工具。可以先在全域把它設成 deny，再針對特定的 agent 設成 allow，做到「預設收緊、按需開放」的管理方式，避免不必要的工具權限被濫用，例如廣告資料只給行銷用的 agent 開放。
 -->
 
 ---
@@ -279,7 +341,7 @@ layout: default
 # 練習：用三個免費 API 做一次選品驗證
 ### 任務說明
 
-在 `opencode.json` 接上 `trend-lookup`（Google Trends）、`meta-ad-library`、`reddit-search` 三個 MCP，針對自己想到的一個商品點子，請 opencode 綜合三份資料給出「值不值得做」的判斷。
+在 `opencode.jsonc` 接上 `trend-lookup`（Google Trends）、`meta-ad-library`、`reddit-search` 三個 MCP，針對自己想到的一個商品點子，請 opencode 綜合三份資料給出「值不值得做」的判斷。
 
 ---
 layout: default
@@ -288,9 +350,9 @@ layout: default
 # 練習：用三個免費 API 做一次選品驗證
 ### 解題提示
 
-1. 先接 `trend-lookup`（local，免驗證），確認能查到搜尋熱度資料
+1. 先請 opencode 寫好 `trend_mcp_server.py`，再接上 `trend-lookup`（local，免驗證），確認能查到搜尋熱度資料
 2. 再接 `reddit-search`（remote，需 OAuth），跑一次 `opencode mcp auth reddit-search`
-3. 有申請到 Meta 權杖的話，把 `meta-ad-library` 也接上；沒有的話先跳過，兩個資料源也能練習
+3. 有申請到 Meta 權杖的話，把 `meta-ad-library` 也接上；沒有的話先跳過，或請 AI 改用「手動到 Ad Library 網站查到的結果」當作第三份資料
 4. 在對話中具體描述商品點子，讓 AI 自動判斷該呼叫哪些工具，並要求它列出「三份數據分別說了什麼」再下結論
 
 <!--

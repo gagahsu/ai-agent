@@ -92,8 +92,8 @@ class: flex flex-col justify-center items-center text-center
 | 型態 | 說明 |
 | --- | --- |
 | 終端機介面（TUI） | 主要使用方式，在指令列直接對話 |
-| 桌面應用 | 圖形化介面版本 |
-| IDE 擴充套件 | 整合進編輯器內使用 |
+| 桌面應用 | 圖形化介面版本（macOS / Windows / Linux） |
+| 精簡介面 | `opencode mini`，畫面較簡單的版本 |
 
 <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-400 text-gray-700 text-sm text-left">
 💡 <b>為什麼要學：</b> opencode 開源、可自由更換 AI 供應商（不綁定單一家），也內建支援 Mistral 等多家模型供應商，彈性最高。
@@ -113,21 +113,20 @@ opencode 支援多種安裝方式，挑一種適合自己系統的即可。
 
 | 方式 | 指令 |
 | --- | --- |
-| 官方安裝腳本 | `curl -fsSL https://opencode.ai/install \| bash` |
-| npm | `npm install -g opencode-ai` |
-| Homebrew（macOS） | `brew install anomalyco/tap/opencode` |
-| Windows（Chocolatey） | `choco install opencode` |
-| Windows（Scoop） | `scoop install opencode` |
+| 官方安裝腳本（macOS / Linux） | `curl -fsSL https://opencode.ai/v2/install \| bash` |
+| npm | `npm install -g @opencode/cli` |
+| Homebrew（macOS） | `brew install anomalyco/tap/opencode-v2` |
+| Windows | 到官網下載桌面安裝檔（`.exe`），或用 npm 安裝 |
 
 <div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-gray-700 text-sm text-left">
-⚠️ <b>注意：</b> 需要「現代終端機」（如 Windows Terminal、WezTerm、Ghostty），太舊的終端機可能無法正常顯示 TUI 介面。
+⚠️ <b>注意：</b> 建議使用「現代終端機」（如 Windows Terminal、WezTerm、Ghostty），太舊的終端機可能無法正常顯示 TUI 介面。網路上的舊教學常寫 <code>opencode-ai</code> 或 Chocolatey、Scoop，那是舊版（V1）的安裝方式。
 </div>
 
 <!--
 安裝方式很多元，不用糾結選哪個，選一個你平常最熟悉的工具就好。
 如果你電腦已經有裝 Node.js，直接 npm install -g 是最快的。
 Mac 用戶習慣用 Homebrew 的話也可以直接 brew install。
-Windows 的同學，用 Chocolatey 或 Scoop 都行，兩個是類似 npm 但專門管理 Windows 軟體的工具。
+Windows 的同學，最簡單的方式是到官網下載桌面安裝檔，或是用 npm 安裝。網路上很多舊教學會寫 Chocolatey 或 Scoop，那是舊版的方式，新版官方已經不支援了。
 提醒一下，這是一個文字介面（TUI）工具，畫面會有顏色、框線，記得用比較新的終端機開啟，舊的 cmd.exe 可能顯示會跑版。
 -->
 
@@ -152,19 +151,19 @@ class: flex flex-col justify-center items-center text-center
 | 步驟 | 指令 / 操作 |
 | --- | --- |
 | 進入專案 | `cd /path/to/project` |
-| 啟動 TUI | `opencode` |
-| 初始化專案分析 | `/init`（產生 `AGENTS.md`） |
+| 啟動 TUI | `opencode`（也可以直接指定資料夾：`opencode ~/projects/my-app`） |
 | 連接 AI 供應商 | `/connect` |
+| 產生專案說明 | 請 AI「分析這個專案，幫我寫一份 `AGENTS.md`」 |
 
 <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-400 text-gray-700 text-sm text-left">
-💡 <b>AGENTS.md 是什麼：</b> opencode 分析完專案後產生的說明檔，讓 AI 之後理解這個專案的架構與慣例，等於幫它寫一份「新人交接手冊」。
+💡 <b>AGENTS.md 是什麼：</b> 一份專案說明檔，opencode 每次對話都會自動讀它，讓 AI 理解這個專案的架構與慣例，等於幫它寫一份「新人交接手冊」。第 8 章會詳細教怎麼寫。
 </div>
 
 <!--
 想使用 opencode，第一步永遠是先 cd 進入你要處理的專案資料夾，這點跟一般終端機工具一樣。
 接著打 opencode，會開啟一個文字介面的對話視窗。
-第一次使用建議先打 /init，opencode 會掃描整個專案，自動生成一份 AGENTS.md，就像新人到職前，前輩幫忙寫的「專案交接筆記」，讓 AI 以後回答問題時更懂這個專案的來龍去脈。
-最後用 /connect 來設定要用哪一家 AI 模型，這步之後會細講怎麼接 Mistral。
+接著用 /connect 來設定要用哪一家 AI 模型，這步之後會細講怎麼接 Mistral。
+接上模型之後，可以請 AI 分析整個專案，幫你寫一份 AGENTS.md，就像新人到職前，前輩幫忙寫的「專案交接筆記」，讓 AI 以後回答問題時更懂這個專案的來龍去脈。第 8 章會專門教怎麼寫一份好的 AGENTS.md。
 -->
 
 ---
@@ -175,21 +174,21 @@ class: flex flex-col justify-center items-center text-center
 # 進入你的專案資料夾
 cd ~/projects/my-app
 
-# 啟動 opencode（第一次會問你要不要 /init）
+# 啟動 opencode
 opencode
 
-# 在 opencode 對話框內輸入
-/init
-
-# 連接 AI 供應商
+# 在 opencode 對話框內輸入：連接 AI 供應商
 /connect
+
+# 接上模型後，直接用文字請 AI 分析專案
+分析這個專案，幫我寫一份 AGENTS.md，先給我看再存檔
 ```
 
 <!--
 我們實際操作一次。
 先 cd 到專案，再打 opencode 開啟介面。
-opencode 開啟後就是一個輸入框，我們直接打斜線指令，例如 /init。
-執行完後，专案資料夾裡就會多一份 AGENTS.md，之後每次跟 AI 對話，它都會先讀過這份筆記。
+opencode 開啟後就是一個輸入框，我們先打斜線指令 /connect 接上 AI 供應商。
+接著直接用文字請 AI 分析專案、寫一份 AGENTS.md。存檔之後，專案資料夾裡就會多一份 AGENTS.md，之後每次跟 AI 對話，它都會先讀過這份筆記。
 -->
 
 ---
@@ -212,21 +211,22 @@ class: flex flex-col justify-center items-center text-center
 
 | 指令 | 說明 |
 | --- | --- |
-| `/init` | 分析專案並產生 AGENTS.md |
 | `/connect` | 設定 AI 供應商與 API key |
 | `/models` | 切換使用的模型 |
+| `/new` / `/sessions` | 開新對話／查看過去的對話 |
 | `/undo` / `/redo` | 復原／重做剛才的變更 |
-| `/share` | 產生可分享的對話連結 |
+| `Ctrl+P` | 打開指令面板，列出所有可用指令 |
 
 <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-400 text-gray-700 text-sm text-left">
-💡 <b>Plan Mode：</b> 按 Tab 鍵切換「規劃模式」，AI 只會先描述打算怎麼改，不會真的動手改檔案，適合先確認方向再執行。
+💡 <b>Plan 模式：</b> 按 <code>Shift+Tab</code>（或輸入 <code>/agents</code>）切換到 <code>plan</code> agent，AI 只會先描述打算怎麼改，不會真的動手改檔案，適合先確認方向再執行。
 </div>
 
 <!--
 opencode 的操作邏輯很像我們平常用的聊天機器人，只是多了這些「斜線指令」當捷徑。
-最常用的除了 /init、/connect，還有 /undo 跟 /redo，AI 改壞你的程式碼時，一鍵復原不用自己 git checkout。
-另外提醒一個很實用的技巧：按 Tab 鍵可以切到「Plan Mode」，這時候 AI 只會跟你講解它打算怎麼做，不會真的動手改檔案，等於先看藍圖再蓋房子，避免它亂改一通。
-還可以用 @ 符號快速搜尋並引用專案裡的檔案，跟 AI 說「幫我看 @app.js」就會直接帶入那個檔案內容。
+最常用的除了 /connect、/models，還有 /undo 跟 /redo，AI 改壞你的程式碼時，一鍵復原不用自己 git checkout。/new 可以開一個全新的對話，/sessions 可以回到之前的對話。
+記不住指令也沒關係，按 Ctrl+P 會列出所有可用的指令。
+另外提醒一個很實用的技巧：按 Shift+Tab 可以切到 plan 模式，這時候 AI 只會跟你講解它打算怎麼做，不會真的動手改檔案，等於先看藍圖再蓋房子，避免它亂改一通。
+還可以用 @ 符號快速搜尋並引用專案裡的檔案，跟 AI 說「幫我看 @app.js」就會直接帶入那個檔案內容。在對話框開頭打驚嘆號 !，則可以直接執行終端機指令。
 -->
 
 ---
@@ -239,21 +239,22 @@ opencode 除了互動式 TUI，也能用一般指令列方式執行單次任務�
 # 直接下一個任務，不進入互動介面
 opencode run "解釋這個專案的資料夾結構"
 
-# 查看目前已設定的 AI 供應商
-opencode auth list
+# 在指定的資料夾開啟 opencode
+opencode ~/projects/my-app
 
-# 查看有哪些可用的模型
-opencode models
+# 開啟精簡版介面
+opencode mini
 
-# 啟動無介面的 HTTP 伺服器
-opencode serve
+# 查看設定檔、資料存放在哪裡
+opencode debug paths
 ```
 
 <!--
 除了打開黑底介面慢慢對話，opencode 也支援「一次性任務」的用法，很適合寫在腳本或 CI 流程裡。
 opencode run 後面直接接你的問題，它執行完就會印出結果，不會停留在互動畫面。
-opencode auth list 可以確認目前有哪些供應商的金鑰已經設定好了。
-opencode serve 則是把 opencode 變成一個背景服務，讓其他工具透過 API 呼叫它，這個進階用法我們先知道就好。
+後面直接接資料夾路徑，可以不用先 cd 就在那個資料夾開啟 opencode。
+opencode mini 會開一個畫面比較簡單的版本。
+opencode debug paths 可以查看設定檔、資料存在電腦的哪裡，之後找設定檔的時候很好用。
 -->
 
 ---
